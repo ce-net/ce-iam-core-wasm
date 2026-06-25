@@ -1,0 +1,55 @@
+# ce-iam-core-wasm — the wasm-bindgen port of the SMALL crate (ce-iam-core).
+#
+# This exposes the secrets vault (open/recover/get/put/grant/verifyGrant + device enrollment +
+# challenge-response auth) and capability VERIFY to the browser, over the SAME Rust code the native
+# CLI runs (ce-iam-core), so the browser and the CLI agree byte-for-byte (golden-vector parity with
+# ce-secrets/src/crypto.mjs).
+#
+# WASM-CLEAN: the dependency graph is pure crypto/serde — no tokio, no reqwest, no libp2p, no ce-rs.
+# ce-iam-core itself pulls only ce-cap/ce-identity/ce-secrets-rs/anyhow/serde/serde_json/hex. The
+# vault's async `Store` is driven here against an in-memory snapshot with a trivial poll-once executor
+# (the MemStore never actually suspends), so no async runtime enters the wasm graph. The wall-clock
+# and OS-RNG are the only host hooks: getrandom uses its `js` backend in the browser, and the vault's
+# record clock is injected from JS (Date.now), so SystemTime is never reached.
+[package]
+name = "ce-iam-core-wasm"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+authors = ["Leif Rydenfalk <ledamecrydenfalk@gmail.com>"]
+repository = "https://github.com/ce-net/ce-iam"
+description = "wasm-bindgen port of ce-iam-core: the CE secrets vault (open/recover/get/put/grant) + capability VERIFY for the browser, byte-for-byte with the ce-iam CLI and the ce-secrets JS reference."
+keywords = ["ce", "iam", "secrets", "wasm", "vault"]
+categories = ["wasm", "cryptography", "authentication"]
+
+[lib]
+name = "ce_iam_core_wasm"
+# cdylib for the wasm artifact (wasm-pack / wasm-bindgen); rlib so host `cargo test` works.
+crate-type = ["cdylib", "rlib"]
+path = "src/lib.rs"
+
+[dependencies]
+# The lightweight half of CE IAM — the real vault + cap-verify code (no reimplementation).
+ce-iam-core = { path = "../ce-iam/crates/ce-iam-core" }
+# The byte-exact JS-vault crypto primitives (DeviceKey::generate, encoding helpers, parse_iso_ms).
+ce-secrets-rs = { path = "../ce-secrets-rs" }
+# Capability verify needs the chain/id types directly for the wasm verify() binding.
+ce-cap = { path = "../ce/crates/ce-cap" }
+ce-identity = { path = "../ce/crates/ce-identity" }
+
+anyhow = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+hex = "0.4"
+wasm-bindgen = "0.2"
+serde-wasm-bindgen = "0.6"
+# Surface Rust panics as JS console errors (tiny, wasm-friendly).
+console_error_panic_hook = { version = "0.1", optional = true }
+# OS RNG in the browser: route getrandom to the Web Crypto / Node crypto backend.
+getrandom = { version = "0.2", features = ["js"] }
+
+[features]
+default = ["console_error_panic_hook"]
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3"
