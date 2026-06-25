@@ -1,21 +1,21 @@
 //! GOLDEN-VECTOR GATE for the wasm port — the browser vault must agree byte-for-byte with the
 //! canonical JS vault (`ce-secrets/src/crypto.mjs` + `vault.mjs`), exercised THROUGH the wasm-bindgen
-//! surface (`WasmVault`) rather than the raw `ce-iam-core` API.
+//! surface (`VaultCore`) rather than the raw `ce-iam-core` API.
 //!
 //! These are the SAME `fixtures/secrets_vectors.json` vectors the `ce-iam-core` golden test uses
 //! (produced by driving the real JS vault over a fixed owner key + fixed clock). Here we seed a
-//! `WasmVault` snapshot with the JS-produced enrollment / grant / secret records and prove the wasm
+//! `VaultCore` snapshot with the JS-produced enrollment / grant / secret records and prove the wasm
 //! port:
-//!   * VERIFIES the JS-signed challenge proof through `WasmVault::verifyAuth`.
-//!   * VERIFIES the JS-issued grant token through `WasmVault::verifyGrant`.
-//!   * OPENS the JS-sealed secret through `WasmVault::getSecret` (master-derived, AES-GCM).
+//!   * VERIFIES the JS-signed challenge proof through `VaultCore::verifyAuth`.
+//!   * VERIFIES the JS-issued grant token through `VaultCore::verifyGrant`.
+//!   * OPENS the JS-sealed secret through `VaultCore::getSecret` (master-derived, AES-GCM).
 //!   * derives the SAME owner master + device id the JS did.
 //!
 //! Run as host tests (the wasm-bindgen exports compile for the host via the `rlib` crate-type), so
 //! `cargo test` / `ce-build ... test` cover them in CI without a browser. Passing here pins all five
 //! interop traps end-to-end through the wasm bindings.
 
-use ce_iam_core_wasm::WasmVault;
+use ce_iam_core_wasm::VaultCore;
 use serde_json::{Map, Value};
 
 const VECTORS: &str = include_str!("fixtures/secrets_vectors.json");
@@ -25,7 +25,7 @@ fn vectors() -> Value {
 }
 
 /// Build a snapshot JSON object `{ key: value }` from the fixture's enrollment + grant records, so a
-/// `WasmVault` constructed with the owner key sees the JS-produced state.
+/// `VaultCore` constructed with the owner key sees the JS-produced state.
 fn seed_snapshot(v: &Value, include_grant: bool) -> String {
     let mut m = Map::new();
     m.insert(
@@ -39,11 +39,11 @@ fn seed_snapshot(v: &Value, include_grant: bool) -> String {
     serde_json::to_string(&Value::Object(m)).unwrap()
 }
 
-fn owner_vault(v: &Value, snapshot: &str) -> WasmVault {
+fn owner_vault(v: &Value, snapshot: &str) -> VaultCore {
     let owner_json = serde_json::to_string(&v["owner"]).unwrap();
     let ns = v["ns"].as_str().unwrap();
-    let vault = WasmVault::new(&owner_json, ns, "2026-06-26T00:00:00.000Z")
-        .expect("construct WasmVault from JS owner key");
+    let vault = VaultCore::new(&owner_json, ns, "2026-06-26T00:00:00.000Z")
+        .expect("construct VaultCore from JS owner key");
     vault.load_snapshot(snapshot).expect("load JS snapshot");
     vault
 }
@@ -90,7 +90,7 @@ fn wasm_verifies_the_js_issued_grant_token() {
             v["grant"]["audience"].as_str().unwrap(),
             v["grant"]["action"].as_str().unwrap(),
             v["grant"]["name"].as_str().unwrap(),
-            0.0,
+            0,
         )
         .expect("the JS-issued grant token must verify through the wasm vault");
 
@@ -102,7 +102,7 @@ fn wasm_verifies_the_js_issued_grant_token() {
                 "not-the-audience",
                 v["grant"]["action"].as_str().unwrap(),
                 v["grant"]["name"].as_str().unwrap(),
-                0.0,
+                0,
             )
             .is_err()
     );
@@ -138,7 +138,7 @@ fn wasm_recover_rederives_the_same_master_and_reads() {
     let owner_json = serde_json::to_string(&v["owner"]).unwrap();
     let ns = v["ns"].as_str().unwrap();
 
-    let vault = WasmVault::new(&owner_json, ns, "2026-06-26T00:00:00.000Z").unwrap();
+    let vault = VaultCore::new(&owner_json, ns, "2026-06-26T00:00:00.000Z").unwrap();
     assert!(!vault.is_enrolled().unwrap());
     vault.recover("owner").unwrap();
     assert!(vault.is_enrolled().unwrap());
