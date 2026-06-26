@@ -15,7 +15,7 @@
 name = "ce-iam-core-wasm"
 version = "0.1.0"
 edition = "2024"
-license = "MIT"
+license = "AGPL-3.0-only"
 authors = ["Leif Rydenfalk <ledamecrydenfalk@gmail.com>"]
 repository = "https://github.com/ce-net/ce-iam"
 description = "wasm-bindgen port of ce-iam-core: the CE secrets vault (open/recover/get/put/grant) + capability VERIFY for the browser, byte-for-byte with the ce-iam CLI and the ce-secrets JS reference."
