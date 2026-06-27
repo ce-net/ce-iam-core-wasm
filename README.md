@@ -59,3 +59,8 @@ cargo test                       # or: tools/ce-build ce-iam-core-wasm test   (o
 rustup target add wasm32-unknown-unknown    # once
 wasm-pack build --target web --release --out-dir ../ce-iam-ts/src/wasm
 ```
+
+## License
+
+AGPL-3.0-only. A commercial license is also available — see [`LICENSING.md`](./LICENSING.md)
+and [`COMMERCIAL-LICENSE.md`](./COMMERCIAL-LICENSE.md).
