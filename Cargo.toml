@@ -30,12 +30,12 @@ path = "src/lib.rs"
 
 [dependencies]
 # The lightweight half of CE IAM — the real vault + cap-verify code (no reimplementation).
-ce-iam-core = { path = "../ce-iam/crates/ce-iam-core" }
+ce-iam-core = { git = "https://github.com/ce-net/ce-iam" }
 # The byte-exact JS-vault crypto primitives (DeviceKey::generate, encoding helpers, parse_iso_ms).
-ce-secrets-rs = { path = "../ce-secrets-rs" }
+ce-secrets-rs = { git = "https://github.com/ce-net/ce-secrets-rs" }
 # Capability verify needs the chain/id types directly for the wasm verify() binding.
-ce-cap = { path = "../ce/crates/ce-cap" }
-ce-identity = { path = "../ce/crates/ce-identity" }
+ce-cap = { git = "https://github.com/ce-net/ce" }
+ce-identity = { git = "https://github.com/ce-net/ce" }
 
 anyhow = "1"
 serde = { version = "1", features = ["derive"] }
