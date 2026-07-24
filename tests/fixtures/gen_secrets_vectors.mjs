@@ -16,6 +16,9 @@
 // Randomized outputs (wrap IV, seal IV) are baked into the vectors; the Rust gate is DECRYPT/VERIFY
 // parity on those, plus byte-identical output on the deterministic pieces (derive, canonical, id).
 
+// PREREQUISITE (regeneration only — the committed secrets_vectors.json is what tests consume):
+// a local clone of the golden JS reference, ce-secrets (github.com/ce-net/ce-secrets), at the
+// relative path below. Adjust the path to wherever your clone lives if it differs.
 import * as C from '../../../../../ce-secrets/src/crypto.mjs';
 import * as A from '../../../../../ce-secrets/src/auth.mjs';
 import * as V from '../../../../../ce-secrets/src/vault.mjs';

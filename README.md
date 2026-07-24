@@ -1,6 +1,6 @@
 # ce-iam-core-wasm
 
-The wasm-bindgen port of [`ce-iam-core`](../ce-iam/crates/ce-iam-core) — the **small** half of CE IAM
+The wasm-bindgen port of `ce-iam-core` (a crate of github.com/ce-net/ce-iam) — the **small** half of CE IAM
 ("basic auth") — for the browser. It exposes two things to JavaScript, over the SAME Rust code the
 native `ce-iam` CLI runs, so the browser, the CLI, and the `ce-secrets` JS reference all agree
 byte-for-byte (golden-vectored against `ce-secrets/src/crypto.mjs`):
@@ -12,7 +12,7 @@ byte-for-byte (golden-vectored against `ce-secrets/src/crypto.mjs`):
 - **Capability VERIFY** (`verify`) — runs `ce_cap::authorize` over a presented capability chain.
   VERIFY only; minting authority lives in the big `ce-iam` crate and never enters the browser.
 
-It is the wasm layer under [`ce-iam-ts`](../ce-iam-ts), the TS SDK that ce-cast (and any browser tab)
+It is the wasm layer under `ce-iam-ts` (github.com/ce-net/ce-iam-ts), the TS SDK that ce-cast (and any browser tab)
 uses instead of vendoring `crypto.mjs` / `vault.mjs`.
 
 ## Wasm-clean
@@ -55,7 +55,8 @@ All crypto + vault orchestration stays in Rust (one implementation); only transp
 # host tests (CI / ce-build) — the wasm exports compile for the host via the rlib crate-type
 cargo test                       # or: tools/ce-build ce-iam-core-wasm test   (on the relay)
 
-# the browser bundle (emits ../ce-iam-ts/src/wasm/)
+# the browser bundle — emitted straight into a sibling clone of ce-iam-ts
+# (github.com/ce-net/ce-iam-ts), which vendors the output under src/wasm/
 rustup target add wasm32-unknown-unknown    # once
 wasm-pack build --target web --release --out-dir ../ce-iam-ts/src/wasm
 ```
